@@ -1,11 +1,20 @@
-# Compiled
-*.elc
+# Neovim plugin development
+*.tmp
+.DS_Store
 
-# Packaging
-.cask
+# Test files and local development
+test_*.lua
+local_test.*
 
-# Backup files
+# Editor backups
 *~
+.swp
+.swo
 
-# Undo-tree save-files
-*.~undo-tree
+# OS files
+Thumbs.db
+
+# Agent stuff
+.claude
+CLAUDE.md
+planning

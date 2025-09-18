@@ -1,80 +1,113 @@
-# test-at-point
-Emacs Package for easily sending unit tests to compile-mode
+# test-at-point.nvim
 
+A Neovim plugin for easily running unit tests at cursor position.
 
-This package adds some simple functions for allowing you to quickly run individual unit tests across a variety of major-modes using compile mode.
+## 🙏 Acknowledgments
 
+This plugin is inspired by and reimplements the functionality of the excellent [test-at-point](https://github.com/C-Hipple/test-at-point) Emacs package by Chris Hipple. While this is a complete rewrite for Neovim.
 
+**Original Emacs Package**: https://github.com/C-Hipple/test-at-point  
+**Original Author**: Chris Hipple
 
-## Usage
+## 🚀 Development Status
 
-Calling `run-test-at-point` will lookup the test at the current point via regular expression searching and then run that only that test via `compile-mode`.
-
-![](https://github.com/C-Hipple/test-at-point/blob/main/media/test-at-point.gif?raw=true)
-
-Add your preferred keybinding to your init.
-
-```elisp
-(define-key evil-normal-state-map (kbd "SPC c t") 'run-test-at-point)
-```
+Early WIP - You probably shouldn't use this yet
 
 ## Installation
 
-Use your favorite package manager to install from this github repository
+Using [lazy.nvim](https://github.com/folke/lazy.nvim):
 
-### Spacemacs
-
-(I use spacemacs, but any emacs should work)
-
-```elisp
-dotspacemacs-additional-packages '(
-  ...
-  (code-review :location (recipe
-    :fetcher github
-    :repo "C-Hipple/test-at-point"
-    :files ("*.el")))
-  ...
-)
+```lua
+{
+  "BakerNet/test-at-point.nvim",
+  dependencies = {
+    "nvim-treesitter/nvim-treesitter", -- Optional: for enhanced test detection
+  }
+  config = function()
+    require("test-at-point").setup({
+      -- Configuration options
+    })
+  end,
+}
 ```
 
-## Full Docs:
+## Commands
 
-https://test-at-point.readthedocs.io/en/latest/
+| Command | Description |
+|---------|-------------|
+| `:TestAtPoint` | Run test at cursor position |
+| `:TestAtPointLast` | Re-run last test |
+| `:TestAtPointDebug` | Run test in debug mode |
+| `:TestAtPointSelect` | Add test to selection buffer |
+| `:TestAtPointRunSelected` | Run all selected tests |
+| `:TestAtPointClearSelected` | Clear test selection |
+| `:TestAtPointSwitch` | Switch between source and test files |
 
-## Extending functionality
+## Supported Languages
 
-Currently only python, go, and rust are supported.  To add more languages add values do the following:
-1. Add the regex which finds a test function name to the alist `mode-test-pattern-alist`
-2. Add a command builder function and link it to the major mode via `mode-command-pattern-alist`
+- **Go**: Test functions, benchmarks, examples
+- **Python**: pytest, unittest, async tests
+- **Rust**: `#[test]`, `#[tokio::test]`, rstest
+- **JavaScript/TypeScript**: Jest, Vitest, Mocha patterns
 
+## Health Check
 
-## Setting custom test command functions
+Run `:checkhealth test-at-point` to verify:
+- Neovim version compatibility
+- Plugin configuration
+- Language tool availability
+- Optional dependency status
 
-A lot of larger projects will have custom tooling or specific commands which need to be used in order to run tests.
+## Configuration
 
-In the below example we override the rust test command builder to always use the environment variable as RUST_BACKTRACE=1.
+<details>
+<summary>Full Configuration Schema</summary>
 
-
-```elisp
-
-(defun diff-lsp-test-command (file-name test-name)
-  (concat "RUST_BACKTRACE=1 cargo test " test-name))
-
-(setq project-mode-command-overide-alist
-      ;; example with one of my other open source projects
-      ;; Setting various rust modes depending on how that emacs is configured.
-      '(("diff-lsp" . ((rustic-mode . diff-lsp-test-command),
-                       (rust-mode . diff-lsp-test-command),
-                       (rust-ts-mode . diff-lsp-test-command)))))
+```lua
+{
+  -- Global settings
+  auto_save = true,                    -- Save buffers before running tests
+  prefer_treesitter = true,            -- Prefer treesitter over patterns
+  silent = false,                      -- Suppress informational messages
+  
+  -- Output configuration
+  output = {
+    mode = "quickfix",                 -- "quickfix" | "terminal" | "floating"
+    terminal = {
+      size = 0.3,                      -- Size as fraction or absolute
+      position = "bottom",             -- "bottom" | "right" | "floating"
+    },
+    quickfix = {
+      auto_open = true,                -- Auto-open on failures
+      auto_close = false,              -- Auto-close on success
+    }
+  },
+  
+  -- Execution settings
+  execution = {
+    timeout = 30000,                   -- Timeout in milliseconds
+    cwd_strategy = "project_root",     -- "current" | "project_root" | "file_dir"
+  },
+  
+  -- Key mappings
+  keymaps = {
+    run_test = "<leader>tr",
+    run_last = "<leader>tl",
+    debug_test = "<leader>td",
+    select_test = "<leader>ts",
+  },
+  
+  -- Language-specific settings
+  languages = {
+    go = {
+      patterns = { "^func (Test%w+)" },
+      commands = { "go test -v -run ^%s$ ./..." },
+      root_markers = { "go.mod" }
+    }
+    -- ... other languages
+  }
+}
 ```
 
-Personally I set all of my keybindings for compiling as `spc c <keybind>`
+</details>
 
-This package does not set any keybinds by default.
-
-```elisp
-(define-key evil-normal-state-map (kbd "SPC c t") 'run-test-at-point)
-(define-key evil-normal-state-map (kbd "SPC c a") 'select-current-test-at-point)
-(define-key evil-normal-state-map (kbd "SPC c T") 'test-at-point-run-selected)
-(define-key evil-normal-state-map (kbd "SPC c u") 'remove-current-test-at-point-from-buffer)
-```
